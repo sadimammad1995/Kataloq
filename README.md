@@ -1,0 +1,2 @@
+# Kataloq
+Vumart məhsul kataloqu
