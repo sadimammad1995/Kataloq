@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Məhsul Kataloqu</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf8f5;
+  --white: #ffffff;
+  --border: #e8e2d9;
+  --text: #1a1714;
+  --muted: #9a9088;
+  --accent: #b8652a;
+  --accent-light: #f5ede4;
+  --accent2: #d4824a;
+  --shadow: 0 2px 16px rgba(0,0,0,0.07);
+  --radius: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 28px 40px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.logo-mark {
+  width: 40px; height: 40px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+header p {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+/* ── LOADING STATE ── */
+#loadingBar {
+  background: var(--accent);
+  height: 3px;
+  width: 0%;
+  transition: width 0.4s ease;
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 100;
+}
+
+/* ── MAIN LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: calc(100vh - 89px);
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  margin-bottom: 8px;
+}
+
+.sidebar-title {
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  padding: 0 20px 10px;
+}
+
+/* Category buttons */
+.cat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  border-left: 3px solid transparent;
+}
+.cat-btn:hover { background: var(--bg); }
+.cat-btn.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 500;
+}
+.cat-btn .count {
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+.cat-btn.active .count {
+  background: rgba(184,101,42,0.15);
+  color: var(--accent);
+}
+
+/* Sub group buttons — indented, shown only when parent active */
+.sub-group {
+  display: none;
+  padding: 4px 0 8px 0;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.sub-group.visible { display: block; }
+
+.sub-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 20px 7px 32px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.sub-btn::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.sub-btn:hover { color: var(--text); background: rgba(0,0,0,0.03); }
+.sub-btn.active {
+  color: var(--accent);
+  font-weight: 500;
+}
+.sub-btn.active::before { background: var(--accent); }
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 20px;
+}
+
+/* ── MAIN CONTENT ── */
+.main {
+  padding: 28px 32px;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.breadcrumb span { color: var(--text); font-weight: 500; }
+.breadcrumb .sep { color: var(--border); }
+
+/* Search */
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.search-box {
+  flex: 1;
+  max-width: 340px;
+  position: relative;
+}
+.search-box input {
+  width: 100%;
+  padding: 9px 14px 9px 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.83rem;
+  background: var(--white);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box input::placeholder { color: var(--muted); }
+.search-icon {
+  position: absolute;
+  left: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+.result-count {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-left: auto;
+}
+
+/* Section title */
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Product grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+  animation: popIn 0.25s ease both;
+  cursor: default;
+}
+.card:hover {
+  box-shadow: var(--shadow);
+  border-color: #d4c4b4;
+  transform: translateY(-2px);
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.97) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.card-sub {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.card-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-price {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+.card-price sup {
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+/* Empty / loading states */
+.state-box {
+  grid-column: 1/-1;
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--muted);
+}
+.state-box .icon { font-size: 2.5rem; margin-bottom: 12px; }
+.state-box p { font-size: 0.9rem; line-height: 1.6; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 680px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+  }
+  .main { padding: 20px 16px; }
+  header { padding: 20px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div id="loadingBar"></div>
+
+<header>
+  <div class="logo-mark">K</div>
+  <div>
+    <h1>Məhsul Kataloqu</h1>
+    <p id="headerSub">Yüklənir...</p>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Kateqoriyalar</div>
+      <div id="catList"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="breadcrumb" id="breadcrumb">
+      Bütün məhsullar
+    </div>
+
+    <div class="search-row">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Məhsul axtar..." oninput="renderProducts()" />
+      </div>
+      <span class="result-count" id="resultCount"></span>
+    </div>
+
+    <div class="section-title" id="sectionTitle">Bütün məhsullar</div>
+
+    <div class="grid" id="productGrid"></div>
+  </main>
+
+</div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbyNNNmp8AC3uwJFF9zVmg7KsC7JOZIm-TT0yIyq-7zEcezuISrehqAV9wol9UeV3cipQA/exec";
+
+let allData = [];
+let activeCat = null;
+let activeSub = null;
+
+// ── INIT ─────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', loadData);
+
+async function loadData() {
+  setLoading(true);
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error();
+    allData = await res.json();
+    buildSidebar();
+    renderProducts();
+    document.getElementById('headerSub').textContent = allData.length + ' məhsul';
+  } catch(e) {
+    document.getElementById('headerSub').textContent = 'Xəta baş verdi';
+    document.getElementById('productGrid').innerHTML = `
+      <div class="state-box">
+        <div class="icon">⚠️</div>
+        <p>Məlumatlar yüklənmədi.<br>Apps Script URL-ni yoxlayın.</p>
+      </div>`;
+  }
+  setLoading(false);
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────────────────
+function buildSidebar() {
+  // Group: cat → subs
+  const tree = {};
+  allData.forEach(r => {
+    if (!tree[r.cat]) tree[r.cat] = new Set();
+    if (r.sub) tree[r.cat].add(r.sub);
+  });
+
+  const catList = document.getElementById('catList');
+  catList.innerHTML = '';
+
+  // "Hamısı" button
+  const allBtn = document.createElement('button');
+  allBtn.className = 'cat-btn active';
+  allBtn.id = 'cat-ALL';
+  allBtn.innerHTML = `<span>Hamısı</span><span class="count">${allData.length}</span>`;
+  allBtn.onclick = () => selectCat(null);
+  catList.appendChild(allBtn);
+
+  catList.appendChild(makeDivider());
+
+  Object.entries(tree).forEach(([cat, subsSet]) => {
+    const subs = [...subsSet];
+    const catCount = allData.filter(r => r.cat === cat).length;
+
+    // Category button
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.id = 'cat-' + cat;
+    btn.innerHTML = `<span>${cat}</span><span class="count">${catCount}</span>`;
+    btn.onclick = () => selectCat(cat);
+    catList.appendChild(btn);
+
+    // Sub group container
+    if (subs.length > 0) {
+      const subGroup = document.createElement('div');
+      subGroup.className = 'sub-group';
+      subGroup.id = 'sub-' + cat;
+
+      subs.forEach(sub => {
+        const subCount = allData.filter(r => r.cat === cat && r.sub === sub).length;
+        const sbtn = document.createElement('button');
+        sbtn.className = 'sub-btn';
+        sbtn.id = 'sub-' + cat + '-' + sub;
+        sbtn.innerHTML = `${sub} <span style="margin-left:auto;font-size:0.7rem;color:var(--muted)">${subCount}</span>`;
+        sbtn.onclick = (e) => { e.stopPropagation(); selectSub(cat, sub); };
+        subGroup.appendChild(sbtn);
+      });
+
+      catList.appendChild(subGroup);
+    }
+  });
+}
+
+function makeDivider() {
+  const d = document.createElement('div');
+  d.className = 'divider';
+  return d;
+}
+
+// ── SELECTION ─────────────────────────────────────────────────────────
+function selectCat(cat) {
+  activeCat = cat;
+  activeSub = null;
+
+  // Update cat buttons
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  const target = document.getElementById(cat ? 'cat-' + cat : 'cat-ALL');
+  if (target) target.classList.add('active');
+
+  // Show/hide sub groups
+  document.querySelectorAll('.sub-group').forEach(g => g.classList.remove('visible'));
+  if (cat) {
+    const sg = document.getElementById('sub-' + cat);
+    if (sg) sg.classList.add('visible');
+  }
+
+  // Clear sub selection
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+
+  updateBreadcrumb();
+  renderProducts();
+}
+
+function selectSub(cat, sub) {
+  // If same cat not selected, select it first
+  if (activeCat !== cat) {
+    activeCat = cat;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    const cb = document.getElementById('cat-' + cat);
+    if (cb) cb.classList.add('active');
+    document.querySelectorAll('.sub-group').forEach(g => g.classList.remove('visible'));
+    const sg = document.getElementById('sub-' + cat);
+    if (sg) sg.classList.add('visible');
+  }
+
+  // Toggle sub
+  if (activeSub === sub) {
+    activeSub = null;
+    document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+  } else {
+    activeSub = sub;
+    document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+    const sb = document.getElementById('sub-' + cat + '-' + sub);
+    if (sb) sb.classList.add('active');
+  }
+
+  updateBreadcrumb();
+  renderProducts();
+}
+
+// ── BREADCRUMB ────────────────────────────────────────────────────────
+function updateBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  const st = document.getElementById('sectionTitle');
+
+  if (!activeCat) {
+    bc.innerHTML = '<span>Bütün məhsullar</span>';
+    st.textContent = 'Bütün məhsullar';
+  } else if (!activeSub) {
+    bc.innerHTML = `Bütün məhsullar <span class="sep">›</span> <span>${activeCat}</span>`;
+    st.textContent = activeCat;
+  } else {
+    bc.innerHTML = `Bütün məhsullar <span class="sep">›</span> ${activeCat} <span class="sep">›</span> <span>${activeSub}</span>`;
+    st.textContent = activeSub;
+  }
+}
+
+// ── RENDER PRODUCTS ───────────────────────────────────────────────────
+function renderProducts() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+
+  let filtered = allData.filter(r => {
+    const catOk = !activeCat || r.cat === activeCat;
+    const subOk = !activeSub || r.sub === activeSub;
+    const searchOk = !q || r.name.toLowerCase().includes(q) ||
+                     r.cat.toLowerCase().includes(q) ||
+                     r.sub.toLowerCase().includes(q);
+    return catOk && subOk && searchOk;
+  });
+
+  document.getElementById('resultCount').textContent = filtered.length + ' məhsul';
+
+  const grid = document.getElementById('productGrid');
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="state-box"><div class="icon">🔍</div><p>Məhsul tapılmadı</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((r, i) => `
+    <div class="card" style="animation-delay:${Math.min(i * 0.03, 0.4)}s">
+      <div class="card-sub">${r.sub || r.cat}</div>
+      <div class="card-name">${r.name}</div>
+      <div class="card-footer">
+        <div class="card-price">${formatPrice(r.price)}<sup>₼</sup></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function formatPrice(p) {
+  const n = parseFloat(p);
+  if (isNaN(n)) return p;
+  return n % 1 === 0 ? n.toLocaleString('az') : n.toFixed(2);
+}
+
+// ── LOADING BAR ───────────────────────────────────────────────────────
+function setLoading(on) {
+  const bar = document.getElementById('loadingBar');
+  bar.style.width = on ? '70%' : '100%';
+  if (!on) setTimeout(() => bar.style.opacity = '0', 300);
+  else bar.style.opacity = '1';
+}
+</script>
+</body>
+</html>
